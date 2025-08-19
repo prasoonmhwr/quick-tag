@@ -1,5 +1,30 @@
 @import "tailwindcss";
+@font-face {
+  font-family: 'Doodle';
+  src: url('/fonts/RubikDoodleShadow-Regular.ttf') format('truetype');
+  
+}
 
+@font-face {
+  font-family: 'KantiThin';
+  src: url('/fonts/Kanit-Thin.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Funnel';
+  src: url('/fonts/FunnelDisplay-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Doto';
+  src: url('/fonts/Doto_Rounded-Black.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 :root {
   --background: #ffffff;
   --foreground: #171717;

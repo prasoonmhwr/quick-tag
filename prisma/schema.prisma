@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model User {
+    id        String   @id @default(cuid())
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    imageUrl  String?
+    firstName String?
+    lastName  String?
+
+    emailAddress String @unique
+
+    
+    userToCodes UserToCode[]
+    transactions  Transaction[]
+    numberOfQR Int @default(0)
+}
+model Transaction{
+ id        String   @id @default(cuid())
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    userId    String
+    user User @relation(fields: [userId], references: [id])
+}
+model UserToCode{
+    id        String   @id @default(cuid())
+    
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    userId    String
+    qrcodeId String
+
+    user User @relation(fields: [userId], references: [id])
+    qrcode QRCode @relation(fields: [qrcodeId], references: [id])
+
+    @@unique([userId, qrcodeId])
+}
+model QRCode {
+  id          String   @id @default(cuid())
+  shortId     String   @unique
+  title       String
+  type        QRType
+  content     String
+  targetUrl   String?
+  isActive    Boolean  @default(true)
+  
+  // Customization
+  foregroundColor String @default("#000000")
+  backgroundColor String @default("#ffffff")
+  errorCorrection String @default("M")
+  logo        String?
+  
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  scans       QRScan[]
+  userToCodes UserToCode[]
+  @@map("qr_codes")
+}
+
+model QRScan {
+  id        String   @id @default(cuid())
+  qrCodeId  String
+  
+  // Analytics data
+  scannedAt DateTime @default(now())
+  ipAddress String?
+  userAgent String?
+  country   String?
+  city      String?
+  device    String?
+  browser   String?
+  os        String?
+  
+  // Relations
+  qrCode    QRCode   @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+  
+  @@map("qr_scans")
+}
+
+enum QRType {
+  URL
+  TEXT
+  WIFI
+  EMAIL
+  PHONE
+  SMS
+}

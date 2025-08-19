@@ -14,7 +14,8 @@ export async function PUT(
       size,
       foregroundColor,
       backgroundColor,
-      errorCorrection
+      errorCorrection,
+      logo
     } = body
 
     const qrCode = await prisma.qRCode.update({
@@ -23,10 +24,10 @@ export async function PUT(
         title,
         targetUrl,
         isActive,
-        size,
         foregroundColor,
         backgroundColor,
         errorCorrection,
+        logo,
         updatedAt: new Date()
       }
     })

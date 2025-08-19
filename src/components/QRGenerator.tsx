@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { QrCode, Link, Type, Wifi, Mail, Phone, MessageSquare, Settings, Download } from 'lucide-react'
+import { QrCode, Link, Type, Wifi, Mail, Phone, MessageSquare, Settings, Download, Upload, X } from 'lucide-react'
 import { generateQRCode, formatQRData } from '@/lib/qr-generator'
-
+import { nanoid } from 'nanoid'
 const QR_TYPES = [
   { id: 'url', label: 'URL', icon: Link, placeholder: 'https://example.com' },
   { id: 'text', label: 'Text', icon: Type, placeholder: 'Enter your text here' },
@@ -20,10 +20,11 @@ export function QRGenerator() {
     type: 'url',
     data: '',
     targetUrl: '',
-    size: 256,
     errorCorrection: 'M' as 'L' | 'M' | 'Q' | 'H',
     foregroundColor: '#000000',
     backgroundColor: '#ffffff',
+    logo: '',
+    size: 256,
   })
 
   const [wifiSecurity, setWifiSecurity] = useState('WPA')
@@ -33,9 +34,32 @@ export function QRGenerator() {
   const [smsMessage, setSmsMessage] = useState('')
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const qrRef = useRef<HTMLDivElement>(null)
   const currentType = QR_TYPES.find(type => type.id === config.type)
+
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file && file.type.startsWith('image/')) {
+      setLogoFile(file)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const logoDataUrl = e.target?.result as string
+        setConfig(prev => ({ ...prev, logo: logoDataUrl }))
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removeLogo = () => {
+    setLogoFile(null)
+    setConfig(prev => ({ ...prev, logo: '' }))
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
 
   const generateQR = async () => {
     if (!config.data.trim()) {
@@ -57,6 +81,7 @@ export function QRGenerator() {
       const dataUrl = await generateQRCode({
         ...config,
         data: formattedData,
+        size: 256,
       })
       setQrDataUrl(dataUrl)
     } catch (error) {
@@ -94,7 +119,11 @@ export function QRGenerator() {
       if (response.ok) {
         alert('QR Code saved successfully!')
         // Reset form
-        setConfig(prev => ({ ...prev, title: '', data: '', targetUrl: '' }))
+        setConfig(prev => ({ ...prev, title: '', data: '', targetUrl: '', logo: '' }))
+        setLogoFile(null)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
         setQrDataUrl(null)
         // Trigger refresh of QR list
         window.dispatchEvent(new CustomEvent('qr-list-refresh'))
@@ -151,27 +180,7 @@ export function QRGenerator() {
       </div>
 
       {/* Mode Description */}
-      <div className="text-center mb-8 sm:mb-12">
-        <div className="max-w-3xl mx-auto px-4">
-          {qrMode === 'static' ? (
-            <div className="bg-blue-50/50 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-blue-200/50">
-              <h3 className="text-lg sm:text-xl font-semibold text-blue-900 mb-2">Static QR Codes</h3>
-              <p className="text-sm sm:text-base text-blue-700">
-                Perfect for permanent content like URLs, contact info, or WiFi credentials. 
-                Once generated, the content cannot be changed, but they work forever without any dependencies.
-              </p>
-            </div>
-          ) : (
-            <div className="bg-purple-50/50 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-purple-200/50">
-              <h3 className="text-lg sm:text-xl font-semibold text-purple-900 mb-2">Dynamic QR Codes</h3>
-              <p className="text-sm sm:text-base text-purple-700">
-                Ideal for campaigns and changing content. Update the destination URL anytime without reprinting. 
-                Includes analytics, tracking, and the ability to modify content after creation.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+     
 
       <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 mb-12">
         {/* Left Column - Configuration */}
@@ -226,7 +235,7 @@ export function QRGenerator() {
             </h3>
 
             <div className="space-y-4">
-              <div>
+              {(qrMode === 'static' && config.type !== 'url') && <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {config.type === 'wifi' ? 'Network Name (SSID)' :
                     config.type === 'email' ? 'Email Address' :
@@ -240,7 +249,7 @@ export function QRGenerator() {
                   placeholder={currentType?.placeholder}
                   className="w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-base"
                 />
-              </div>
+              </div>}
 
               {/* Dynamic QR Target URL */}
               {qrMode === 'dynamic' && config.type === 'url' && (
@@ -327,80 +336,7 @@ export function QRGenerator() {
           </div>
 
           {/* Customization Options */}
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 shadow-lg">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <Settings className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-blue-600" />
-              Customization Options
-            </h3>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Size (px)</label>
-                  <input
-                    type="range"
-                    min="128"
-                    max="512"
-                    step="32"
-                    value={config.size}
-                    onChange={(e) => setConfig(prev => ({ ...prev, size: parseInt(e.target.value) }))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  />
-                  <span className="text-sm text-gray-600">{config.size}px</span>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Error Correction</label>
-                  <select
-                    value={config.errorCorrection}
-                    onChange={(e) => setConfig(prev => ({ ...prev, errorCorrection: e.target.value as 'L' | 'M' | 'Q' | 'H' }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
-                  >
-                    <option value="L">Low (7%)</option>
-                    <option value="M">Medium (15%)</option>
-                    <option value="Q">Quartile (25%)</option>
-                    <option value="H">High (30%)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Foreground Color</label>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="color"
-                      value={config.foregroundColor}
-                      onChange={(e) => setConfig(prev => ({ ...prev, foregroundColor: e.target.value }))}
-                      className="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      value={config.foregroundColor}
-                      onChange={(e) => setConfig(prev => ({ ...prev, foregroundColor: e.target.value }))}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Background Color</label>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="color"
-                      value={config.backgroundColor}
-                      onChange={(e) => setConfig(prev => ({ ...prev, backgroundColor: e.target.value }))}
-                      className="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      value={config.backgroundColor}
-                      onChange={(e) => setConfig(prev => ({ ...prev, backgroundColor: e.target.value }))}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        
         </div>
 
         {/* Right Column - QR Code Preview */}
@@ -483,53 +419,115 @@ export function QRGenerator() {
             )}
           </div>
 
-          {/* Features */}
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 shadow-lg">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-              {qrMode === 'static' ? 'Static QR Features' : 'Dynamic QR Features'}
+  <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 shadow-lg">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <Settings className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-blue-600" />
+              Customization Options
             </h3>
-            <div className="space-y-3">
-              {qrMode === 'static' ? (
-                <>
-                  <div className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full mr-3 flex-shrink-0"></div>
-                    <span className="text-sm sm:text-base">100% Free - No registration required</span>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Logo</label>
+                  <div className="space-y-3">
+                    {!logoFile ? (
+                      <div>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-full flex items-center justify-center px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                        >
+                          <Upload className="h-5 w-5 text-gray-400 mr-2" />
+                          <span className="text-sm text-gray-600">Upload Logo</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={config.logo}
+                              alt="Logo preview"
+                              className="w-10 h-10 object-cover rounded"
+                            />
+                            <span className="text-sm text-gray-700 truncate">{logoFile.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={removeLogo}
+                            className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                          >
+                            <X className="h-4 w-4 text-gray-500" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500">
+                      Recommended: Square image, PNG/JPG, max 2MB
+                    </p>
                   </div>
-                  <div className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-green-600 rounded-full mr-3 flex-shrink-0"></div>
-                    <span className="text-sm sm:text-base">Privacy-focused - Generated locally</span>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Error Correction</label>
+                  <select
+                    value={config.errorCorrection}
+                    onChange={(e) => setConfig(prev => ({ ...prev, errorCorrection: e.target.value as 'L' | 'M' | 'Q' | 'H' }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
+                  >
+                    <option value="L">Low (7%)</option>
+                    <option value="M">Medium (15%)</option>
+                    <option value="Q">Quartile (25%)</option>
+                    <option value="H">High (30%)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Foreground Color</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={config.foregroundColor}
+                      onChange={(e) => setConfig(prev => ({ ...prev, foregroundColor: e.target.value }))}
+                      className="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={config.foregroundColor}
+                      onChange={(e) => setConfig(prev => ({ ...prev, foregroundColor: e.target.value }))}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
+                    />
                   </div>
-                  <div className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-purple-600 rounded-full mr-3 flex-shrink-0"></div>
-                    <span className="text-sm sm:text-base">Multiple formats - PNG, JPG, SVG</span>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Background Color</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={config.backgroundColor}
+                      onChange={(e) => setConfig(prev => ({ ...prev, backgroundColor: e.target.value }))}
+                      className="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={config.backgroundColor}
+                      onChange={(e) => setConfig(prev => ({ ...prev, backgroundColor: e.target.value }))}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
+                    />
                   </div>
-                  <div className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-orange-600 rounded-full mr-3 flex-shrink-0"></div>
-                    <span className="text-sm sm:text-base">High quality - Scalable graphics</span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-purple-600 rounded-full mr-3 flex-shrink-0"></div>
-                    <span className="text-sm sm:text-base">Real-time content updates</span>
-                  </div>
-                  <div className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full mr-3 flex-shrink-0"></div>
-                    <span className="text-sm sm:text-base">Detailed scan analytics</span>
-                  </div>
-                  <div className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-green-600 rounded-full mr-3 flex-shrink-0"></div>
-                    <span className="text-sm sm:text-base">URL shortening & branding</span>
-                  </div>
-                  <div className="flex items-center text-gray-700">
-                    <div className="w-2 h-2 bg-orange-600 rounded-full mr-3 flex-shrink-0"></div>
-                    <span className="text-sm sm:text-base">Campaign management</span>
-                  </div>
-                </>
-              )}
+                </div>
+              </div>
             </div>
           </div>
+         
         </div>
       </div>
     </>

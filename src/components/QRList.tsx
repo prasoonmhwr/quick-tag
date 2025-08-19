@@ -79,7 +79,7 @@ export function QRList() {
   }
 
   const getQRUrl = (shortId: string) => {
-    return `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/qr/${shortId}`
+    return `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/qr/${shortId}`
   }
 
   useEffect(() => {

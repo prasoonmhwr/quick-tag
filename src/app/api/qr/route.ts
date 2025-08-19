@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
       foregroundColor = '#000000',
       backgroundColor = '#ffffff',
       errorCorrection = 'M',
-      additionalData
+      additionalData,
+      logo
     } = body
 
     // Generate short ID for the QR code
@@ -34,10 +35,10 @@ export async function POST(request: NextRequest) {
         type: type.toUpperCase(),
         content,
         targetUrl: finalTargetUrl,
-        size,
         foregroundColor,
         backgroundColor,
         errorCorrection,
+        logo,
       }
     })
 

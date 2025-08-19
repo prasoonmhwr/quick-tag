@@ -106,20 +106,6 @@ export function QREditModal({ qr, onClose, onSave }: QREditModalProps) {
             </label>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Size (px)</label>
-            <input
-              type="range"
-              min="128"
-              max="512"
-              step="32"
-              value={formData.size}
-              onChange={(e) => setFormData(prev => ({ ...prev, size: parseInt(e.target.value) }))}
-              className="w-full"
-            />
-            <span className="text-sm text-gray-600">{formData.size}px</span>
-          </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Foreground Color</label>
