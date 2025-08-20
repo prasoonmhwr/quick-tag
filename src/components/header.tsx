@@ -1,6 +1,5 @@
 'use client'
 
-import { QrCode } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export function Header() {

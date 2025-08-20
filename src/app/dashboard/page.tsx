@@ -8,80 +8,28 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { toast } from 'sonner';
 import { QRList } from '@/components/QRList';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { QRGenerator } from '@/components/QRGenerator';
+import { UserButton } from '@clerk/nextjs';
+
 
 const Dashboard = () => {
+    
     const router = useRouter();
+    
+    
     const [searchQuery, setSearchQuery] = useState('');
     const [isOpen, setIsOpen] = useState<boolean>(false)
-    const [isCreateOpen, setCreateOpen] = useState<boolean>(false)
-    const [isOptionOpen, setOptionOpen] = useState<boolean>(false)
-    const [progress, setProgress] = useState(0)
-    // useEffect(() => {
-    //     refetch()
-    // }, [])
+    
 
-    // useEffect(() => {
-    //     if(user?.planType == PlanType.PRO && user?.subscription.plan.serviceProvider == ServiceProvider.DODOPAYMENTS){
-    //         fetch('/api/subscriptions/check',{
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify({
-    //                 subscriptionId: user?.subscription.razorpaySubscriptionId,
-    //             }),
-    //         }).then(response => response.json())
-    //         .then(data => {
-    //             console.log(data)
-    //         })
-    //     }
-    // },[user])
-    // function showResume(e: any, resumeId: string) {
-    //     e.stopPropagation()
-    //     setResumeId(resumeId)
-    //     router.push(`/dashboard/${resumeId}`)
-    // }
-    // const handleCheckboxClick = (e: React.MouseEvent) => {
-    //     e.stopPropagation();
-    // };
+   
     function handleUpgrade() {
         router.push('/subscription')
     }
     function goToSetting() {
         router.push('/settings')
     }
-    // const handleActionClick = async (action: string, resumeId: string) => {
-    //     switch (action) {
-    //         case "delete":
-    //             removeResume(resumeId)
-    //             break;
-    //         case "duplicate":
-    //             if((user?.planType == PlanType.STARTER && user?.numberOfResumes >=1) || (user?.planType == PlanType.PRO && user?.subscription.status != SubscriptionStatus.ACTIVE)){
-    //                 toast.message("Upgrade to PRO")
-    //                 return
-    //             }
-    //             const resume = resumes?.find(resume => resume.id === resumeId)
-    //             const data = await fetch(resume?.pdfUrl!)
-    //             const blob = await data.blob()
-    //             const name = resume?.pdfName.split(".")[0]
-    //             const file = new File([blob], `${name}_Copy.pdf`, { type: "application/pdf" });
-    //             const dataCopy = await uploadResume(file, setProgress);
-    //             refetch()
-    //             const resumeData = await dataCopy.data
-    //             setResumeId(resumeData!.id)
-    //             router.push(`/dashboard/${resumeData!.id}`)
-    //             break;
-    //     }
-    // };
-    // const filteredResumes = useMemo(() => {
-    //     const query = searchQuery.toLowerCase().trim();
-    //     if (!query || query == '') return resumes;
-
-    //     return resumes.filter(resume =>
-    //         resume.pdfName.toLowerCase().includes(query) ||
-    //         getRelativeTimeString(resume.updatedAt.toString()).toLowerCase().includes(query)
-    //     );
-    // }, [searchQuery, resumes]);
+    
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
     };
@@ -113,16 +61,9 @@ const Dashboard = () => {
         }
     }
     const handleUpload = () => {
-        setOptionOpen(true)
+        setIsOpen(true)
     };
-    const handleSelection = (type: string) => {
-        setOptionOpen(false)
-        if (type == "create") {
-            setCreateOpen(true)
-        } else if (type == "upload") {
-            setIsOpen(true)
-        }
-    }
+   
     // const handleUploadComplete = async () => {
     //     await refetch();
     // };
@@ -142,7 +83,7 @@ const Dashboard = () => {
                     <div className='flex justify-between items-center w-20 text-zinc-500'> <button className="p-1 hover:bg-zinc-600 rounded transition-colors" onClick={(e) => { e.stopPropagation(); goToSetting() }}>
                         <Settings className="w-6 h-6 text-zinc-400 hover:text-zinc-200" />
                     </button>
-                        {/* <UserButton
+                        <UserButton
                             appearance={{
                                 elements: {
                                     userButtonPopoverMain: "bg-zinc-800",
@@ -154,14 +95,29 @@ const Dashboard = () => {
                                 }
                             }
                             }
-                        /> */}
+                        />
                     </div>
                 </div>
-
+                <div className='flex justify-end'>
+                    <button
+                    onClick={handleUpload}
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg shadow hover:bg-gray-700 transition my-4"
+                >
+                    <Plus className="w-5 h-5" />
+                    <span>Create QR Code</span>
+                </button>
+                </div>
                 <QRList />
 
             </div>
-
+            <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
+                <DialogContent aria-describedby="Create QR Code" className="max-w-[100%] sm:max-w-[100%] max-h-[80vh] h-full w-7xl overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle></DialogTitle>
+                    </DialogHeader>
+                    <div className='w-full'><QRGenerator /></div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 

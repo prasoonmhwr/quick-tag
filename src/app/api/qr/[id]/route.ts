@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { auth } from '@clerk/nextjs/server';
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
     const body = await request.json()
     const {
       title,
@@ -31,7 +40,6 @@ export async function PUT(
         updatedAt: new Date()
       }
     })
-
     return NextResponse.json(qrCode)
   } catch (error) {
     console.error('Error updating QR code:', error)
@@ -44,6 +52,20 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    await prisma.userToCode.deleteMany({
+      where: {
+        userId:userId,
+        qrcodeId: params.id
+      }
+    })
     await prisma.qRCode.delete({
       where: { id: params.id }
     })

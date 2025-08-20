@@ -1,9 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { QrCode, Link, Type, Wifi, Mail, Phone, MessageSquare, Settings, Download, Upload, X } from 'lucide-react'
+import {  Link, Type, Wifi, Mail, Phone, MessageSquare, Settings, Download, Upload, X } from 'lucide-react'
 import { generateQRCode, formatQRData } from '@/lib/qr-generator'
-import { nanoid } from 'nanoid'
+
+import { toast } from 'sonner'
 const QR_TYPES = [
   { id: 'url', label: 'URL', icon: Link, placeholder: 'https://example.com' },
   { id: 'text', label: 'Text', icon: Type, placeholder: 'Enter your text here' },
@@ -13,6 +14,38 @@ const QR_TYPES = [
   { id: 'sms', label: 'SMS', icon: MessageSquare, placeholder: '+1234567890' },
 ]
 
+// Static QR Types - No tracking, permanent content
+const STATIC_QR_TYPES = [
+  { id: 'text', label: 'Text', icon: Type, placeholder: 'Enter your text here', description: 'Displays plain text' },
+  { id: 'url', label: 'URL', icon: Link, placeholder: 'https://example.com', description: 'Open a url' },
+  { id: 'wifi', label: 'Wi-Fi', icon: Wifi, placeholder: 'Network Name', description: 'Connect to a Wi-Fi network' },
+  { id: 'sms', label: 'SMS', icon: MessageSquare, placeholder: '+1234567890', description: 'Send a text message' },
+  { id: 'vcard', label: 'vCard', icon: Phone, placeholder: 'Contact Name', description: 'Share and store your contact details' },
+  { id: 'whatsapp', label: 'Whatsapp', icon: MessageSquare, placeholder: '+1234567890', description: 'Send a WhatsApp message' },
+  { id: 'email', label: 'Email', icon: Mail, placeholder: 'user@example.com', description: 'Send an email with a predefined text' },
+]
+
+// Dynamic QR Types - With tracking and analytics
+const DYNAMIC_QR_TYPES = [
+  { id: 'website', label: 'Website', icon: Link, placeholder: 'https://example.com', description: 'Open a URL' },
+  { id: 'pdf', label: 'PDF', icon: Type, placeholder: 'PDF Title', description: 'Show a PDF' },
+  { id: 'images', label: 'Images', icon: Type, placeholder: 'Gallery Title', description: 'Show an image gallery' },
+  { id: 'vcard_plus', label: 'vCard Plus', icon: Phone, placeholder: 'Contact Name', description: 'Share contact details' },
+  { id: 'video', label: 'Video', icon: Type, placeholder: 'Video Title', description: 'Show a video' },
+  { id: 'list_links', label: 'List of links', icon: Type, placeholder: 'Link Collection', description: 'Group links' },
+  { id: 'social_media', label: 'Social Media', icon: Type, placeholder: 'Profile Name', description: 'Share your social profiles' },
+  { id: 'mp3', label: 'MP3', icon: Type, placeholder: 'Audio Title', description: 'Play an audio file' },
+  { id: 'business', label: 'Business', icon: Type, placeholder: 'Business Name', description: 'Share information about your business' },
+  { id: 'coupon', label: 'Coupon', icon: Type, placeholder: 'Coupon Title', description: 'Share a coupon' },
+  { id: 'apps', label: 'Apps', icon: Type, placeholder: 'App Name', description: 'Redirect to an app store' },
+  { id: 'landing_page', label: 'Landing page', icon: Type, placeholder: 'Page Title', description: 'Create your own page' },
+  { id: 'product', label: 'Product', icon: Type, placeholder: 'Product Name', description: 'Group information about your product' },
+  { id: 'event', label: 'Event', icon: Type, placeholder: 'Event Name', description: 'Promote and share an event' },
+  { id: 'menu', label: 'Menu', icon: Type, placeholder: 'Restaurant Name', description: 'Display the menu of a restaurant or bar' },
+  { id: 'feedback', label: 'Feedback', icon: Type, placeholder: 'Feedback Form', description: 'Collect feedback and get rated' },
+  { id: 'playlist', label: 'Playlist', icon: Type, placeholder: 'Playlist Name', description: 'Share your own music' },
+  { id: 'barcode_2d', label: '2D Barcode', icon: Type, placeholder: 'Barcode Data', description: 'Supports GS1 standards' },
+]
 export function QRGenerator() {
   const [qrMode, setQrMode] = useState<'static' | 'dynamic'>('static')
   const [config, setConfig] = useState({
@@ -93,7 +126,7 @@ export function QRGenerator() {
 
   const saveQRCode = async () => {
     if (!config.data.trim() || !config.title.trim()) {
-      alert('Please fill in the title and data fields')
+      toast.warning('Please fill in the title and data fields')
       return
     }
 
@@ -117,7 +150,7 @@ export function QRGenerator() {
       })
 
       if (response.ok) {
-        alert('QR Code saved successfully!')
+        toast.success('QR Code saved successfully!')
         // Reset form
         setConfig(prev => ({ ...prev, title: '', data: '', targetUrl: '', logo: '' }))
         setLogoFile(null)
@@ -128,11 +161,11 @@ export function QRGenerator() {
         // Trigger refresh of QR list
         window.dispatchEvent(new CustomEvent('qr-list-refresh'))
       } else {
-        alert('Failed to save QR code')
+        toast.error('Failed to save QR code')
       }
     } catch (error) {
       console.error('Error saving QR code:', error)
-      alert('Failed to save QR code')
+      toast.error('Failed to save QR code')
     }
   }
 
@@ -146,9 +179,25 @@ export function QRGenerator() {
   }
 
   useEffect(() => {
-    generateQR()
+    if(qrMode === 'static') {
+      generateQR()
+    }
   }, [config, wifiSecurity, wifiPassword, emailSubject, emailBody, smsMessage])
 
+  async function generateDynamicQR() {
+    
+    if(config.type == 'url'){
+        await setConfig(prev => ({ ...prev, type: 'url', data: config.targetUrl }))
+    }
+      console.log(config)
+    if (!config.data.trim() || !config.title.trim()) {
+      toast.warning('Please fill in the title and data fields')
+      return
+    }
+    setIsGenerating(true)
+    // await generateQR()
+    await saveQRCode()
+  }
   return (
     <>
       {/* QR Mode Switcher */}
@@ -157,21 +206,19 @@ export function QRGenerator() {
           <div className="flex">
             <button
               onClick={() => setQrMode('static')}
-              className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 ${
-                qrMode === 'static'
-                  ? 'bg-blue-600 text-white shadow-md'
+              className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 ${qrMode === 'static'
+                  ? 'bg-gray-900 text-white shadow-md'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Static QR
             </button>
             <button
               onClick={() => setQrMode('dynamic')}
-              className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 ${
-                qrMode === 'dynamic'
-                  ? 'bg-blue-600 text-white shadow-md'
+              className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium text-sm sm:text-base transition-all duration-200 ${qrMode === 'dynamic'
+                  ? 'bg-gray-900 text-white shadow-md'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
+                }`}
             >
               Dynamic QR
             </button>
@@ -180,7 +227,7 @@ export function QRGenerator() {
       </div>
 
       {/* Mode Description */}
-     
+
 
       <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 mb-12">
         {/* Left Column - Configuration */}
@@ -213,14 +260,18 @@ export function QRGenerator() {
                   <button
                     key={type.id}
                     onClick={() => setConfig(prev => ({ ...prev, type: type.id, data: '' }))}
-                    className={`p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 active:scale-95 touch-manipulation ${
-                      config.type === type.id
+                    className={`p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 active:scale-95 touch-manipulation text-left ${config.type === type.id
                         ? 'border-blue-500 bg-blue-50 text-blue-700'
                         : 'border-gray-200 bg-white hover:border-gray-300 text-gray-700'
-                    }`}
+                      }`}
                   >
-                    <Icon className="h-5 w-5 sm:h-6 sm:w-6 mx-auto mb-1 sm:mb-2" />
-                    <span className="text-xs sm:text-sm font-medium block">{type.label}</span>
+                    <div className="flex items-start space-x-3">
+                      <Icon className="h-6 w-6 mt-1 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium text-sm">{type.label}</div>
+
+                      </div>
+                    </div>
                   </button>
                 )
               })}
@@ -235,7 +286,7 @@ export function QRGenerator() {
             </h3>
 
             <div className="space-y-4">
-              {(qrMode === 'static' && config.type !== 'url') && <div>
+              {!(qrMode === 'dynamic' && config.type === 'url') && <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {config.type === 'wifi' ? 'Network Name (SSID)' :
                     config.type === 'email' ? 'Email Address' :
@@ -333,19 +384,28 @@ export function QRGenerator() {
                 </div>
               )}
             </div>
+
+            <div className='flex justify-end'>
+             <button
+                onClick={generateDynamicQR}
+                className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium touch-manipulation"
+              >
+                Generate QR Code
+              </button>
+            </div>
           </div>
 
-          {/* Customization Options */}
-        
+     
+
         </div>
 
         {/* Right Column - QR Code Preview */}
         <div className="space-y-6 order-1 lg:order-2">
-          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 lg:p-8 border border-gray-200/50 shadow-lg">
+         {qrMode == 'static' && <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 lg:p-8 border border-gray-200/50 shadow-lg">
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6 text-center">QR Code Preview</h3>
 
             <div className="flex justify-center mb-4 sm:mb-6">
-              <div
+               <div
                 ref={qrRef}
                 className="bg-white p-3 sm:p-4 lg:p-6 rounded-2xl shadow-lg border-4 border-gray-100"
                 style={{ backgroundColor: config.backgroundColor }}
@@ -355,8 +415,8 @@ export function QRGenerator() {
                     src={qrDataUrl}
                     alt="Generated QR Code"
                     className="max-w-full h-auto"
-                    style={{ 
-                      width: Math.min(config.size, 280), 
+                    style={{
+                      width: Math.min(config.size, 280),
                       height: Math.min(config.size, 280),
                       maxWidth: '100%'
                     }}
@@ -364,14 +424,15 @@ export function QRGenerator() {
                 ) : (
                   <div
                     className="bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500"
-                    style={{ 
-                      width: Math.min(config.size, 280), 
+                    style={{
+                      width: Math.min(config.size, 280),
                       height: Math.min(config.size, 280),
                       maxWidth: '100%'
                     }}
                   >
                     <div className="text-center p-4">
-                      <QrCode className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 opacity-50" />
+                      <img className="h-8 w-8 sm:h-12 sm:w-12 text-gray-900" src="/qr-shape.svg" />
+                      {/* <QrCode className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 opacity-50" /> */}
                       <p className="text-xs sm:text-sm">
                         {isGenerating ? 'Generating...' : 'Enter data to generate QR code'}
                       </p>
@@ -408,18 +469,18 @@ export function QRGenerator() {
                       SVG
                     </button>
                   </div>
-                  <button
+                  {/* {qrMode === 'dynamic' && <button
                     onClick={saveQRCode}
                     className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium touch-manipulation"
                   >
                     Save QR Code {qrMode === 'dynamic' ? '(with Analytics)' : ''}
-                  </button>
+                  </button>} */}
                 </div>
               </div>
             )}
-          </div>
+          </div>}
 
-  <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 shadow-lg">
+          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-200/50 shadow-lg">
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <Settings className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-blue-600" />
               Customization Options
@@ -527,7 +588,7 @@ export function QRGenerator() {
               </div>
             </div>
           </div>
-         
+
         </div>
       </div>
     </>
