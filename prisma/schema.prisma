@@ -26,8 +26,6 @@ model User {
   email         String
   emailVerified Boolean
   image         String?
-  sessions      Session[]
-  accounts      Account[]
 
   @@unique([email])
   @@map("user")

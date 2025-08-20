@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts'
 import { Calendar, Smartphone, Globe, TrendingUp } from 'lucide-react'
 
 interface AnalyticsData {
@@ -109,13 +109,14 @@ export function QRAnalytics({ qrId }: { qrId: string }) {
         <h4 className="text-lg font-semibold text-gray-900 mb-4">Scans Over Time</h4>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
+            <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="scans" fill="#3B82F6" />
-            </BarChart>
+              <Line type="monotone" dataKey="scans" stroke="#8884d8" />
+              
+            </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
