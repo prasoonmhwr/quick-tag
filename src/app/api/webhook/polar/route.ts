@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
         where: { userId },
         update: {
           status,
+          cancel_at_period_end: type == 'subscription.canceled' ? data.cancel_at_period_end : false,
           currentPeriodEnd: currentPeriodEnd ? new Date(currentPeriodEnd) : null,
         },
         create: {
