@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getQRAnalytics } from '@/lib/analytics'
 import { auth } from '@clerk/nextjs/server';
+import { userHasDynamicAccess } from '@/lib/billing';
 
 export async function GET(
   request: NextRequest,
@@ -15,6 +16,10 @@ export async function GET(
         { status: 401 }
       );
     }
+    const allowed = await userHasDynamicAccess(userId)
+  if (!allowed) {
+    return NextResponse.json({ error: "Dynamic access required" }, { status: 402 })
+  }
     const { id } = await context.params  
     const analytics = await getQRAnalytics(id)
     return NextResponse.json(analytics)

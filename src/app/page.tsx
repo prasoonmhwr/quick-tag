@@ -3,8 +3,15 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import Feature from '@/components/feature'
 import QRGeneratorLanding from '@/components/QRGeneratorLanding'
+import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 
-export default function Home() {
+export default async function Home() {
+   const { userId } = await auth()
+  if (userId) {
+    redirect('/dashboard')
+
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Header />

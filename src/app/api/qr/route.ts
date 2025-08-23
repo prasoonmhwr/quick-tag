@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { nanoid } from 'nanoid'
 import { formatQRData, generateQRCode } from '@/lib/qr-generator'
 import { auth } from '@clerk/nextjs/server'
+import { userHasDynamicAccess } from '@/lib/billing'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +15,10 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+    const allowed = await userHasDynamicAccess(userId)
+  if (!allowed) {
+    return NextResponse.json({ error: "Dynamic access required" }, { status: 402 })
+  }
     const body = await request.json()
     const {
       title,

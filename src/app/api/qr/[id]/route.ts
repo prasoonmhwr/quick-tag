@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@clerk/nextjs/server';
+import { userHasDynamicAccess } from '@/lib/billing';
 
 export async function PUT(
   request: NextRequest,
@@ -15,6 +16,10 @@ export async function PUT(
         { status: 401 }
       );
     }
+    const allowed = await userHasDynamicAccess(userId)
+  if (!allowed) {
+    return NextResponse.json({ error: "Dynamic access required" }, { status: 402 })
+  }
     const body = await request.json()
     const {
       title,

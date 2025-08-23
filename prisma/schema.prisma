@@ -21,13 +21,9 @@ model User {
 
   userToCodes   UserToCode[]
   transactions  Transaction[]
+  dynamicAccess DynamicAccess?
   numberOfQR    Int           @default(0)
-  name          String
-  email         String
-  emailVerified Boolean
-  image         String?
 
-  @@unique([email])
   @@map("user")
 }
 
@@ -35,8 +31,12 @@ model Transaction {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
+  amount    Int
+  status    String
   userId String
+  invoiceId          String @unique      
+  paymentMethod      String? 
+  paymentDate       DateTime
   user   User   @relation(fields: [userId], references: [id])
 }
 
@@ -103,4 +103,16 @@ enum QRType {
   EMAIL
   PHONE
   SMS
+}
+model DynamicAccess {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  provider          String   @default("polar")
+  status            String   
+  currentPeriodEnd  DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  subscriptionId    String
+  cancel_at_period_end  Boolean @default(false)
+  user   User   @relation(fields: [userId], references: [id])
 }

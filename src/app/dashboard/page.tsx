@@ -1,35 +1,42 @@
 'use client'
-import React, { useEffect, useMemo, useState } from 'react';
-import { Search, Download, Clipboard, Eye, Trash2, Info, Upload, Plus, Settings } from 'lucide-react';
+import React, {  useEffect,  useState } from 'react';
+import { Plus, Settings } from 'lucide-react';
 
 import { useRouter } from 'next/navigation';
 
-import { Skeleton } from '@/components/ui/skeleton';
 
 import { toast } from 'sonner';
 import { QRList } from '@/components/QRList';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { QRGenerator } from '@/components/QRGenerator';
 import { UserButton } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 
 
 const Dashboard = () => {
-    
+
     const router = useRouter();
-    
-    
+
     const [searchQuery, setSearchQuery] = useState('');
     const [isOpen, setIsOpen] = useState<boolean>(false)
-    
+    const { userId } = useAuth()
 
-   
-    function handleUpgrade() {
-        router.push('/subscription')
-    }
+    useEffect(() => {
+        if (!userId) return;
+        (async () => {
+            const res = await fetch(`/api/access-check?userId=${userId}`);
+            const allowed = await res.json();
+            if (!allowed.allowed) {
+                
+                router.push("/pricing");
+            }
+        })();
+    }, [userId]);
+    
     function goToSetting() {
         router.push('/settings')
     }
-    
+
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
     };
@@ -63,10 +70,6 @@ const Dashboard = () => {
     const handleUpload = () => {
         setIsOpen(true)
     };
-   
-    // const handleUploadComplete = async () => {
-    //     await refetch();
-    // };
 
 
     return (
@@ -100,12 +103,12 @@ const Dashboard = () => {
                 </div>
                 <div className='flex justify-end'>
                     <button
-                    onClick={handleUpload}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg shadow hover:bg-gray-700 transition my-4"
-                >
-                    <Plus className="w-5 h-5" />
-                    <span>Create QR Code</span>
-                </button>
+                        onClick={handleUpload}
+                        className="flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg shadow hover:bg-gray-700 transition my-4"
+                    >
+                        <Plus className="w-5 h-5" />
+                        <span>Create QR Code</span>
+                    </button>
                 </div>
                 <QRList />
 
@@ -115,7 +118,7 @@ const Dashboard = () => {
                     <DialogHeader>
                         <DialogTitle></DialogTitle>
                     </DialogHeader>
-                    <div className='w-full'><QRGenerator /></div>
+                    <div className='w-full'><QRGenerator setDialogOpen={setIsOpen}/></div>
                 </DialogContent>
             </Dialog>
         </div>

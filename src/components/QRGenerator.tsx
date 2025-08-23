@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, type SetStateAction, type Dispatch } from 'react'
 import {  Link, Type, Wifi, Mail, Phone, MessageSquare, Settings, Download, Upload, X } from 'lucide-react'
 import { generateQRCode, formatQRData } from '@/lib/qr-generator'
 
@@ -46,7 +46,7 @@ const DYNAMIC_QR_TYPES = [
   { id: 'playlist', label: 'Playlist', icon: Type, placeholder: 'Playlist Name', description: 'Share your own music' },
   { id: 'barcode_2d', label: '2D Barcode', icon: Type, placeholder: 'Barcode Data', description: 'Supports GS1 standards' },
 ]
-export function QRGenerator() {
+export function QRGenerator({setDialogOpen}: {setDialogOpen: Dispatch<SetStateAction<boolean>>}) {
   const [qrMode, setQrMode] = useState<'static' | 'dynamic'>('static')
   const [config, setConfig] = useState({
     title: '',
@@ -158,6 +158,7 @@ export function QRGenerator() {
           fileInputRef.current.value = ''
         }
         setQrDataUrl(null)
+        setDialogOpen(false)
         // Trigger refresh of QR list
         window.dispatchEvent(new CustomEvent('qr-list-refresh'))
       } else {
@@ -186,9 +187,6 @@ export function QRGenerator() {
 
   async function generateDynamicQR() {
     
-    if(config.type == 'url'){
-        await setConfig(prev => ({ ...prev, type: 'url', data: config.targetUrl }))
-    }
       console.log(config)
     if (!config.data.trim() || !config.title.trim()) {
       toast.warning('Please fill in the title and data fields')
@@ -197,6 +195,7 @@ export function QRGenerator() {
     setIsGenerating(true)
     // await generateQR()
     await saveQRCode()
+     setIsGenerating(false)
   }
   return (
     <>
@@ -309,7 +308,7 @@ export function QRGenerator() {
                   <input
                     type="url"
                     value={config.targetUrl}
-                    onChange={(e) => setConfig(prev => ({ ...prev, targetUrl: e.target.value }))}
+                    onChange={(e) => setConfig(prev => ({ ...prev, targetUrl: e.target.value, data:e.target.value }))}
                     placeholder="https://example.com"
                     className="w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-base"
                   />
@@ -385,14 +384,15 @@ export function QRGenerator() {
               )}
             </div>
 
-            <div className='flex justify-end'>
+            {qrMode === 'dynamic' && <div className='flex justify-end'>
              <button
                 onClick={generateDynamicQR}
-                className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium touch-manipulation"
+                disabled={isGenerating}
+                className=" mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium touch-manipulation disabled:bg-gray-500 disabled:cursor-not-allowed"
               >
-                Generate QR Code
+                {isGenerating ? 'Generating...':'Generate QR Code'} 
               </button>
-            </div>
+            </div>}
           </div>
 
      
