@@ -2,7 +2,7 @@ import { Toaster } from 'sonner'
 import './globals.css'
 import { Inter } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
-
+import { Analytics } from "@vercel/analytics/next"
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
@@ -17,6 +17,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
+    <><Analytics />
     <ClerkProvider afterSignOutUrl={'/'}>
     <html lang="en">
       <body className={inter.className}>
@@ -25,5 +26,6 @@ export default function RootLayout({
       </body>
     </html>
     </ClerkProvider>
+    </>
   )
 }
