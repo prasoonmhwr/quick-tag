@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
       );
     }
     const allowed = await userHasDynamicAccess(userId)
-  if (!allowed) {
-    return NextResponse.json({ error: "Dynamic access required" }, { status: 402 })
-  }
+    if (!allowed) {
+      return NextResponse.json({ error: "Dynamic access required" }, { status: 402 })
+    }
     const body = await request.json()
     const {
       title,
@@ -27,12 +27,66 @@ export async function POST(request: NextRequest) {
       targetUrl,
       size = 256,
       foregroundColor = '#000000',
-      backgroundColor = '#ffffff',
       errorCorrection = 'M',
       additionalData,
-      logo
-    } = body
+      logo,
+      dotsStyle,
+      dotColor,
+      dotColorType,
+      dotGradientType,
+      dotGradientRotation,
+      dotGradient,
 
+      backgroundColor,
+      backgroundType,
+      backgroundGradientType,
+      backgroundGradientRotation,
+      backgroundGradient,
+
+      cornersSquareStyle,
+      cornerSquareColorType,
+      cornerSquareGradientType,
+      cornerSquareGradientRotation,
+      cornerSquareColor,
+      cornerSquareGradient,
+
+      cornerDotStyle,
+      cornerDotColorType,
+      cornerDotColor,
+      cornerDotGradientType,
+      cornerDotGradientRotation,
+      cornerDotGradient,
+      imageSize
+    } = body
+    const styleConfig = JSON.stringify({
+     dotsStyle,
+      dotColor,
+      dotColorType,
+      dotGradientType,
+      dotGradientRotation,
+      dotGradient,
+
+      backgroundColor,
+      backgroundType,
+      backgroundGradientType,
+      backgroundGradientRotation,
+      backgroundGradient,
+
+      cornersSquareStyle,
+      cornerSquareColorType,
+      cornerSquareGradientType,
+      cornerSquareGradientRotation,
+      cornerSquareColor,
+      cornerSquareGradient,
+
+      cornerDotStyle,
+      cornerDotColorType,
+      cornerDotColor,
+      cornerDotGradientType,
+      cornerDotGradientRotation,
+      cornerDotGradient,
+      imageSize
+    })
     // Generate short ID for the QR code
     const shortId = nanoid(8)
 
@@ -41,18 +95,7 @@ export async function POST(request: NextRequest) {
 
     // For dynamic QR codes, we'll redirect through our API
     const finalTargetUrl = targetUrl || (type === 'url' ? content : null)
-    // const config = {
-    //   type: type,
-    //   errorCorrection: errorCorrection,
-    //   foregroundColor: foregroundColor,
-    //   backgroundColor: backgroundColor,
-    //   logo: logo
-    // }
-    // const dataUrl = await generateQRCode({
-    //   ...config,
-    //   data: `${process.env.NEXT_PUBLIC_APP_URL}/qr/${shortId}`,
-    //   size: 256,
-    // })
+   
     const dataUrl = `${process.env.NEXT_PUBLIC_APP_URL}/qr/${shortId}`
     const qrCode = await prisma.qRCode.create({
       data: {
@@ -65,10 +108,11 @@ export async function POST(request: NextRequest) {
         backgroundColor,
         errorCorrection,
         logo,
-        dataUrl
+        dataUrl,
+        styleConfig
       }
     })
-await prisma.userToCode.upsert({
+    await prisma.userToCode.upsert({
       where: {
         userId_qrcodeId: {
           userId,

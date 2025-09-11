@@ -19,7 +19,7 @@ export default function RootLayout({
   return (
     <><Analytics />
     <ClerkProvider afterSignOutUrl={'/'}>
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         {children}
         <Toaster richColors/>

@@ -31,7 +31,6 @@ const Settings = () => {
         { id: 'billing', name: 'Billing', icon: <FileText className="w-5 h-5" /> },
     ];
     useEffect(() => {
-        console.log("userId", userId);
         if(!userId) return;
         (async () => {
             const res = await fetch(`/api/access-check?userId=${userId}`);

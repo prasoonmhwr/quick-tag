@@ -27,11 +27,65 @@ export async function PUT(
       isActive,
       size,
       foregroundColor,
-      backgroundColor,
       errorCorrection,
-      logo
-    } = body
+      logo,
+      dotsStyle,
+      dotColor,
+      dotColorType,
+      dotGradientType,
+      dotGradientRotation,
+      dotGradient,
 
+      backgroundColor,
+      backgroundType,
+      backgroundGradientType,
+      backgroundGradientRotation,
+      backgroundGradient,
+
+      cornersSquareStyle,
+      cornerSquareColorType,
+      cornerSquareGradientType,
+      cornerSquareGradientRotation,
+      cornerSquareColor,
+      cornerSquareGradient,
+
+      cornerDotStyle,
+      cornerDotColorType,
+      cornerDotColor,
+      cornerDotGradientType,
+      cornerDotGradientRotation,
+      cornerDotGradient,
+      imageSize
+    } = body
+const styleConfig = JSON.stringify({
+     dotsStyle,
+      dotColor,
+      dotColorType,
+      dotGradientType,
+      dotGradientRotation,
+      dotGradient,
+
+      backgroundColor,
+      backgroundType,
+      backgroundGradientType,
+      backgroundGradientRotation,
+      backgroundGradient,
+
+      cornersSquareStyle,
+      cornerSquareColorType,
+      cornerSquareGradientType,
+      cornerSquareGradientRotation,
+      cornerSquareColor,
+      cornerSquareGradient,
+
+      cornerDotStyle,
+      cornerDotColorType,
+      cornerDotColor,
+      cornerDotGradientType,
+      cornerDotGradientRotation,
+      cornerDotGradient,
+      imageSize
+    })
     const qrCode = await prisma.qRCode.update({
       where: { id: params.id },
       data: {
@@ -42,7 +96,8 @@ export async function PUT(
         backgroundColor,
         errorCorrection,
         logo,
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        styleConfig
       }
     })
     return NextResponse.json(qrCode)

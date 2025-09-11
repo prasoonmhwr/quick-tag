@@ -71,6 +71,7 @@ model QRCode {
   // Metadata
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
+  styleConfig     String       @default("")
   // Relations
   scans           QRScan[]
   userToCodes     UserToCode[]

@@ -8,6 +8,7 @@ import { format, set } from 'date-fns'
 import { Dialog } from '@radix-ui/react-dialog'
 import { DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 import { generateQRCode } from '@/lib/qr-generator'
+import QRCodeStyling, { CornerDotType, CornerSquareType, DotType, GradientType } from 'qr-code-styling'
 
 interface QRCodeData {
   id: string
@@ -20,9 +21,50 @@ interface QRCodeData {
   createdAt: string
   updatedAt: string
   size: number
-  foregroundColor: string
-  backgroundColor: string
-  errorCorrection: string
+  errorCorrection: 'L' | 'M' | 'Q' | 'H'
+   dotsStyle: DotType
+  dotColor: string,
+  dotColorType: 'single' | 'gradient',
+  dotGradientType: GradientType,
+  dotGradientRotation: number,
+  dotGradient: {
+    type: GradientType,
+    rotation: number,
+    colorStops: { offset: number, color: string }[]
+  },
+
+  backgroundColor: string,
+  backgroundType: 'single' | 'gradient',
+  backgroundGradientType: GradientType,
+  backgroundGradientRotation: number,
+  backgroundGradient: {
+    type: GradientType,
+    rotation: number,
+    colorStops: { offset: number, color: string }[]
+  },
+
+  cornersSquareStyle: CornerSquareType,
+  cornerSquareColorType: 'single' | 'gradient',
+  cornerSquareGradientType: GradientType,
+  cornerSquareGradientRotation: number,
+  cornerSquareColor: string,
+  cornerSquareGradient: {
+    type: GradientType,
+    rotation: number,
+    colorStops: { offset: number, color: string }[]
+  },
+
+  cornerDotStyle: CornerDotType,
+  cornerDotColorType: 'single' | 'gradient',
+  cornerDotColor: string,
+  cornerDotGradientType: GradientType,
+  cornerDotGradientRotation: number,
+  cornerDotGradient: {
+    type: GradientType,
+    rotation: number,
+    colorStops: { offset: number, color: string }[]
+  },
+  imageSize: number,
   logo?: string,
   dataUrl: string
   _count: {
@@ -39,13 +81,17 @@ export function QRList() {
   const [editingQR, setEditingQR] = useState<QRCodeData | null>(null)
   const [isViewingQR, setIsViewingQR] = useState<boolean>(false)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
-
+const [qrCode, setQrCode] = useState<QRCodeStyling | null>(null);
   const fetchQRCodes = async () => {
     try {
       const response = await fetch('/api/qr')
       if (response.ok) {
         const data = await response.json()
-        setQrCodes(data)
+        const processedData = data.map((qr: any) => ({
+          ...qr,
+          ...JSON.parse(qr.styleConfig || '{}')
+        }))
+        setQrCodes(processedData)
       }
     } catch (error) {
       console.error('Error fetching QR codes:', error)
@@ -92,20 +138,17 @@ export function QRList() {
 
   async function viewQR(qr: QRCodeData) {
     setViewingQR(qr)
+   
     const config = {
-      type: qr.type,
-      errorCorrection: qr.errorCorrection as 'L' | 'M' | 'Q' | 'H',
-      foregroundColor: qr.foregroundColor,
-      backgroundColor: qr.backgroundColor,
-      logo: qr.logo
+      ...qr
     }
-    const dataUrl = await generateQRCode({
+    const {qrFinal,qrDataUrl} = await generateQRCode({
       ...config,
       data: qr.dataUrl,
       size: 256,
     })
-    setQrDataUrl(dataUrl)
-
+    setQrDataUrl(qrFinal)
+    setQrCode(qrDataUrl);
     setIsViewingQR(true)
   }
   useEffect(() => {
@@ -116,14 +159,19 @@ export function QRList() {
     window.addEventListener('qr-list-refresh', handleRefresh)
     return () => window.removeEventListener('qr-list-refresh', handleRefresh)
   }, [])
-  const downloadQR = (format: string) => {
-    if (qrDataUrl) {
-      const link = document.createElement('a')
-      link.download = `'qrcode'.${format}`
-      link.href = qrDataUrl
-      link.click()
+  const downloadQR = async (format: 'png' | 'svg' | 'jpeg') => {
+    if (qrCode) {
+      const blob = await qrCode.getRawData(format);
+      if (blob) {
+        const url = URL.createObjectURL(blob as Blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `qr-code.${format}`;
+        link.click();
+        URL.revokeObjectURL(url);
+      }
     }
-  }
+  };
   if (loading) {
     return (
       <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-lg">
@@ -324,7 +372,7 @@ export function QRList() {
                     PNG
                   </button>
                   <button
-                    onClick={() => downloadQR('jpg')}
+                    onClick={() => downloadQR('jpeg')}
                     className="flex items-center justify-center px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 touch-manipulation"
                   >
                     <Download className="h-4 w-4 mr-2" />
