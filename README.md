@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## QUICKTAG
 
-## Getting Started
+A modern Dynamic & Static QR Code Generator built with Next.js, TypeScript, TailwindCSS, and ShadCN UI.
+Easily create fully customizable QR codes with analytics support for dynamic codes.
 
-First, run the development server:
+To run the project:
 
 ```bash
+# Clone the repo
+git clone https://github.com/yourusername/quick-tag.git
+
+cd quick-tag
+
+# Install dependencies
+npm install
+
+#run the project
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🔒 Static QR Codes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 100% free, no registration required
 
-## Learn More
+- Privacy-focused — generated locally in your browser
 
-To learn more about Next.js, take a look at the following resources:
+- Multiple export formats: PNG, JPG, SVG
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- High-quality, scalable graphics
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 📊 Dynamic QR Codes
 
-## Deploy on Vercel
+- Real-time content updates
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Detailed scan analytics
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- URL shortening 
+
+
+## 🛠️ Tech Stack
+
+- Framework: Next.js (App Router) + TypeScript
+
+- Styling: Tailwind CSS + ShadCN UI
+
+- Database - POstgreSQL + PrismaORM
+
+- QR Rendering: qrcode
