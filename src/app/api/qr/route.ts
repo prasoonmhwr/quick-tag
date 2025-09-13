@@ -4,6 +4,7 @@ import { nanoid } from 'nanoid'
 import { formatQRData, generateQRCode } from '@/lib/qr-generator'
 import { auth } from '@clerk/nextjs/server'
 import { userHasDynamicAccess } from '@/lib/billing'
+import { decryptQRData, encryptQRData } from '@/lib/encryption'
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
       imageSize
     } = body
     const styleConfig = JSON.stringify({
-     dotsStyle,
+      dotsStyle,
       dotColor,
       dotColorType,
       dotGradientType,
@@ -95,15 +96,24 @@ export async function POST(request: NextRequest) {
 
     // For dynamic QR codes, we'll redirect through our API
     const finalTargetUrl = targetUrl || (type === 'url' ? content : null)
-   
+    const encryptedContent = encryptQRData({
+      originalContent: content,
+      data: data,
+      additionalData: additionalData
+    })
+
+
+    const encryptedTargetUrl = finalTargetUrl ? encryptQRData({
+      targetUrl: finalTargetUrl
+    }) : null
     const dataUrl = `${process.env.NEXT_PUBLIC_APP_URL}/qr/${shortId}`
     const qrCode = await prisma.qRCode.create({
       data: {
         shortId,
         title,
         type: type.toUpperCase(),
-        content,
-        targetUrl: finalTargetUrl,
+        content: encryptedContent,
+        targetUrl: encryptedTargetUrl,
         foregroundColor,
         backgroundColor,
         errorCorrection,
@@ -125,7 +135,13 @@ export async function POST(request: NextRequest) {
         qrcodeId: qrCode.id
       }
     })
-    return NextResponse.json(qrCode)
+    const responseQrCode = {
+      ...qrCode,
+      content: decryptQRData(qrCode.content).originalContent,
+      targetUrl: qrCode.targetUrl ? decryptQRData(qrCode.targetUrl).targetUrl : null
+    }
+
+    return NextResponse.json(responseQrCode)
   } catch (error) {
     console.error('Error creating QR code:', error)
     return NextResponse.json({ error: 'Failed to create QR code' }, { status: 500 })
@@ -157,7 +173,28 @@ export async function GET() {
         }
       }
     })
+    for (const qrCode of qrCodes) {
+      if (qrCode.targetUrl) {
+        try {
+          const dTargetUrl = decryptQRData(qrCode.targetUrl)
+          qrCode.targetUrl = dTargetUrl.targetUrl ? dTargetUrl.targetUrl : null
 
+        } catch (error) {
+          console.error('Error decrypting target URL:', error)
+          return new NextResponse('Error processing QR code', { status: 500 })
+        }
+      } else {
+
+        try {
+          const dContent = decryptQRData(qrCode.content)
+          qrCode.content = dContent.originalContent ? dContent.originalContent : qrCode.content
+
+        } catch (error) {
+          console.error('Error decrypting content:', error)
+          return new NextResponse('Error processing QR code', { status: 500 })
+        }
+      }
+    }
     return NextResponse.json(qrCodes)
   } catch (error) {
     console.error('Error fetching QR codes:', error)

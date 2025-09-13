@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@clerk/nextjs/server';
 import { userHasDynamicAccess } from '@/lib/billing';
+import { encryptQRData } from '@/lib/encryption';
 
 export async function PUT(
   request: NextRequest,
@@ -86,19 +87,28 @@ const styleConfig = JSON.stringify({
       cornerDotGradient,
       imageSize
     })
+    const updateData: any = {
+      title,
+      isActive,
+      foregroundColor,
+      backgroundColor,
+      errorCorrection,
+      logo,
+      updatedAt: new Date(),
+      styleConfig
+    }
+    if (targetUrl !== undefined) {
+      if (targetUrl) {
+        updateData.targetUrl = encryptQRData({
+          targetUrl: targetUrl
+        })
+      } else {
+        updateData.targetUrl = null
+      }
+    }
     const qrCode = await prisma.qRCode.update({
       where: { id: params.id },
-      data: {
-        title,
-        targetUrl,
-        isActive,
-        foregroundColor,
-        backgroundColor,
-        errorCorrection,
-        logo,
-        updatedAt: new Date(),
-        styleConfig
-      }
+      data: updateData
     })
     return NextResponse.json(qrCode)
   } catch (error) {
