@@ -67,7 +67,7 @@ export default function PricingCard() {
             </div>
 
             <div className="shrink-0 rounded-2xl border border-gray-200 bg-white/70 p-6 text-center">
-              <div className="text-4xl font-bold text-gray-900">$9</div>
+              <div className="text-4xl font-bold text-gray-900">$5</div>
               <div className="text-xs uppercase tracking-wider text-gray-500">per month</div>
 
               {checkoutUrl && <a
